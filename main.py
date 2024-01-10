@@ -14,10 +14,12 @@ class Table(Base):
     size = Column(Integer)
     is_available = Column(String, default="Yes")
     reservations = relationship("Reservation", back_populates="table")
-    created_date = Column(DateTime, default=datetime.datetime.utcnow)
 
     def __repr__(self):
-        return f"{self.id} - Size: {self.size} | Available: {self.is_available} | Created: {self.created_date}"
+        return f"{self.id} - Size: {self.size} | Available: {self.is_available} "
+
+
+# Probably no need to add availability here? Any other variables needed?
 
 
 class Reservation(Base):
@@ -32,6 +34,11 @@ class Reservation(Base):
 
     def __repr__(self):
         return f"{self.id} - Customer: {self.customer_name} | Party Size: {self.party_size} | Table ID: {self.table_id} | Reservation Time: {self.reservation_time} | Created: {self.created_date}"
+
+    def is_available():
+        pass
+
+    # To check whether a time when user wants to make a reservation is not occupied. Need to add a way to choose a length of a reservation and a span after a reservation/before when the table should be free for cleaning.
 
 
 Base.metadata.create_all(engine)
@@ -66,10 +73,17 @@ class Restaurant:
     def reserve_table(
         self, customer_name: str, party_size: int, reservation_time: datetime.datetime
     ) -> None:
-        available_tables = session.query(Table).filter_by(is_available="Yes").all()
+        available_tables = (
+            session.query(Table)
+            .filter_by(is_available="Yes")
+            .filter(Table.size >= party_size)
+            .all()
+        )
 
         if not available_tables:
-            print("No available tables for the specified reservation time.")
+            print(
+                f"No available tables with size greater than or equal to {party_size} for the specified reservation time."
+            )
             return
 
         selected_table = available_tables[0]
@@ -84,6 +98,8 @@ class Restaurant:
         session.add(reservation)
         session.commit()
         print(f"Table {selected_table.id} reserved successfully for {customer_name}.")
+
+    # we need to add a way to check whether there isnt a reservation at the choisen time and table already
 
     def list_reservations(self) -> None:
         reservations = session.query(Reservation).all()

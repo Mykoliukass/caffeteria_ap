@@ -110,7 +110,7 @@ restaurant = Restaurant(
 while True:
     option = int(
         input(
-            "Choose option: \n1 - List Tables \n2 - Add Table \n3 - List Reservations \n4 - Cancel Reservation \n5 - Exit\n"
+            "Choose option: \n1 - List Tables \n2 - Add Table \n3 - List Reservations \n4 - Cancel Reservation \n5 - Reserve table \n6 - Exit\n"
         )
     )
 
@@ -129,4 +129,20 @@ while True:
         restaurant.cancel_reservation(reservation_id)
 
     elif option == 5:
+        customer_name = input("Please provide your name: ")
+        party_size = int(input("How many people will be there? "))
+        time_format = "%Y-%m-%d %H"
+        reservation_time_str = input("Enter reservation time (YYYY-MM-DD HH): ")
+
+        try:
+            reservation_time = datetime.datetime.strptime(
+                reservation_time_str, time_format
+            )
+        except ValueError:
+            print("Invalid date format. Please use the format specified.")
+            continue
+
+        restaurant.reserve_table(customer_name, party_size, reservation_time)
+
+    elif option == 6:
         break

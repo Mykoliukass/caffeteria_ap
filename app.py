@@ -2,7 +2,6 @@ import os
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
 from enum import Enum
-
 from flask_bcrypt import Bcrypt
 from flask_login import (
     LoginManager,
@@ -18,7 +17,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "4654f5dfadsrfasdr54e6rae"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
-    basedir, "biudzetas.db"
+    basedir, "restaurant_online.db"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
@@ -40,7 +39,7 @@ class User(db.Model, UserMixin):
     name = db.Column("name", db.String(20), unique=True, nullable=False)
     email = db.Column("Email address", db.String(120), unique=True, nullable=False)
     password = db.Column("Password", db.String(60), unique=True, nullable=False)
-    statusas = db.Column(db.String(10), nullable=False)
+    status = db.Column(db.String(10), nullable=False)
 
 
 @login_manager.user_loader
@@ -50,7 +49,6 @@ def load_user(user_id):
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    db.create_all()
     if current_user.is_authenticated:
         return redirect(url_for("index"))
     form = forms.RegistrationForm()
@@ -58,10 +56,12 @@ def register():
         coded_password = bcrypt.generate_password_hash(form.password.data).decode(
             "utf-8"
         )
+        status = form.status.data or "client"
         user = User(
             name=form.name.data,
             email=form.email.data,
             password=coded_password,
+            status=status,
         )
         db.session.add(user)
         db.session.commit()
@@ -98,6 +98,7 @@ def account():
     return render_template("account.html", title="Account")
 
 
+# Uncomment the route if you want to include it
 # @app.route("/irasai")
 # @login_required
 # def irasai():
@@ -110,5 +111,6 @@ def index():
 
 
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     app.run(host="127.0.0.1", port=8000, debug=True)
-    db.create_all()
